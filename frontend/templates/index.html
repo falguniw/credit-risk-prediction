@@ -1,0 +1,848 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>CreditAI — Risk Prediction</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f7f4ef;
+  --ink:#0f0e0c;
+  --muted:#8a8680;
+  --line:#e2ddd6;
+  --white:#ffffff;
+  --indigo:#3730a3;
+  --indigo-soft:#eef2ff;
+  --green:#166534;
+  --green-soft:#dcfce7;
+  --amber:#92400e;
+  --amber-soft:#fef3c7;
+  --red:#991b1b;
+  --red-soft:#fee2e2;
+  --accent:#4f46e5;
+}
+body{background:var(--bg);color:var(--ink);font-family:'DM Sans',sans-serif;font-size:14px;min-height:100vh;overflow-x:hidden}
+
+/* ── PAGE SYSTEM ── */
+.page{display:none;min-height:100vh}
+.page.active{display:flex}
+
+/* ══════════════════════════════════════════
+   PAGE 1 — INPUT
+══════════════════════════════════════════ */
+#page-input{
+  flex-direction:column;
+  align-items:center;
+  justify-content:flex-start;
+  padding:60px 24px 80px;
+  background:var(--bg);
+  position:relative;
+}
+#page-input::before{
+  content:'';
+  position:fixed;top:0;right:0;
+  width:480px;height:480px;
+  background:radial-gradient(circle at 70% 30%, rgba(79,70,229,0.08) 0%, transparent 70%);
+  pointer-events:none;
+}
+
+.input-brand{
+  text-align:center;
+  margin-bottom:52px;
+}
+.input-brand .wordmark{
+  font-family:'DM Serif Display',serif;
+  font-size:36px;
+  letter-spacing:-0.5px;
+  color:var(--ink);
+  line-height:1;
+}
+.input-brand .wordmark em{color:var(--accent);font-style:normal}
+.input-brand .tagline{font-size:13px;color:var(--muted);margin-top:8px;font-weight:300;letter-spacing:0.3px}
+
+.form-shell{
+  width:100%;
+  max-width:780px;
+  background:var(--white);
+  border:1px solid var(--line);
+  border-radius:20px;
+  overflow:hidden;
+  box-shadow:0 4px 40px rgba(0,0,0,0.06);
+}
+
+.form-top-bar{
+  padding:20px 32px;
+  border-bottom:1px solid var(--line);
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+}
+.form-top-bar .step-label{
+  font-size:11px;
+  font-weight:600;
+  letter-spacing:1px;
+  text-transform:uppercase;
+  color:var(--muted);
+}
+.progress-pills{display:flex;gap:6px}
+.pill{width:28px;height:4px;border-radius:2px;background:var(--line)}
+.pill.done{background:var(--accent)}
+
+.form-body{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:0;
+}
+.form-col{
+  padding:28px 32px;
+}
+.form-col+.form-col{
+  border-left:1px solid var(--line);
+  background:#fcfbf9;
+}
+
+.col-heading{
+  font-family:'DM Serif Display',serif;
+  font-size:17px;
+  color:var(--ink);
+  margin-bottom:22px;
+  padding-bottom:14px;
+  border-bottom:1px solid var(--line);
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+.col-heading .icon{font-size:16px}
+
+.field{margin-bottom:18px}
+.field:last-child{margin-bottom:0}
+.field label{
+  display:block;
+  font-size:11px;
+  font-weight:600;
+  color:var(--muted);
+  letter-spacing:0.5px;
+  text-transform:uppercase;
+  margin-bottom:6px;
+}
+.field input,.field select{
+  width:100%;
+  background:var(--bg);
+  border:1.5px solid var(--line);
+  border-radius:10px;
+  color:var(--ink);
+  font-size:14px;
+  font-family:'DM Sans',sans-serif;
+  font-weight:500;
+  padding:10px 13px;
+  outline:none;
+  transition:border-color 0.15s, background 0.15s;
+  appearance:none;
+}
+.field input:focus,.field select:focus{
+  border-color:var(--accent);
+  background:var(--white);
+}
+.field .hint{font-size:10px;color:var(--muted);margin-top:4px}
+
+.form-footer{
+  padding:22px 32px;
+  border-top:1px solid var(--line);
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:16px;
+}
+.form-footer .notice{font-size:12px;color:var(--muted);max-width:320px;line-height:1.5}
+
+.predict-btn{
+  background:var(--ink);
+  color:#fff;
+  border:none;
+  border-radius:12px;
+  padding:13px 28px;
+  font-size:14px;
+  font-weight:600;
+  font-family:'DM Sans',sans-serif;
+  cursor:pointer;
+  display:flex;
+  align-items:center;
+  gap:9px;
+  transition:opacity 0.15s,transform 0.1s;
+  white-space:nowrap;
+  flex-shrink:0;
+}
+.predict-btn:hover{opacity:0.85}
+.predict-btn:active{transform:scale(0.97)}
+.predict-btn:disabled{opacity:0.45;cursor:not-allowed}
+.btn-arrow{font-size:16px;transition:transform 0.2s}
+.predict-btn:hover .btn-arrow{transform:translateX(3px)}
+
+.loader{width:14px;height:14px;border:2px solid rgba(255,255,255,0.3);border-top-color:#fff;border-radius:50%;animation:spin 0.6s linear infinite;display:none}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+
+/* ══════════════════════════════════════════
+   PAGE 2 — DASHBOARD
+══════════════════════════════════════════ */
+#page-dashboard{
+  flex-direction:row;
+  min-height:100vh;
+}
+
+/* Nav sidebar */
+.dash-nav{
+  width:64px;
+  background:var(--ink);
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  padding:20px 0;
+  gap:4px;
+  position:fixed;
+  top:0;left:0;bottom:0;
+  z-index:100;
+}
+.nav-logo{
+  font-family:'DM Serif Display',serif;
+  font-size:18px;
+  color:#fff;
+  margin-bottom:16px;
+  letter-spacing:-0.5px;
+}
+.nav-logo em{color:var(--accent);font-style:normal}
+.nav-divider{width:32px;height:1px;background:rgba(255,255,255,0.1);margin:8px 0}
+.nav-btn{
+  width:44px;height:44px;
+  border-radius:12px;
+  border:none;
+  background:transparent;
+  color:rgba(255,255,255,0.4);
+  cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  font-size:18px;
+  transition:background 0.15s,color 0.15s;
+  position:relative;
+}
+.nav-btn:hover{background:rgba(255,255,255,0.08);color:rgba(255,255,255,0.7)}
+.nav-btn.active{background:var(--accent);color:#fff}
+.nav-btn .nav-tooltip{
+  position:absolute;
+  left:54px;
+  background:var(--ink);
+  color:#fff;
+  font-size:11px;
+  font-weight:600;
+  white-space:nowrap;
+  padding:5px 10px;
+  border-radius:6px;
+  opacity:0;
+  pointer-events:none;
+  transition:opacity 0.15s;
+}
+.nav-btn:hover .nav-tooltip{opacity:1}
+.nav-back{margin-top:auto}
+
+/* Main dashboard area */
+.dash-main{
+  margin-left:64px;
+  flex:1;
+  display:flex;
+  flex-direction:column;
+}
+
+/* Top bar */
+.dash-topbar{
+  position:sticky;top:0;
+  background:rgba(247,244,239,0.92);
+  backdrop-filter:blur(10px);
+  border-bottom:1px solid var(--line);
+  padding:0 32px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  height:60px;
+  z-index:50;
+}
+.dash-title-area .dash-title{
+  font-family:'DM Serif Display',serif;
+  font-size:20px;
+  color:var(--ink);
+}
+.dash-title-area .dash-sub{font-size:11px;color:var(--muted);margin-top:1px}
+
+.decision-badge{
+  display:inline-flex;
+  align-items:center;
+  gap:7px;
+  padding:7px 16px;
+  border-radius:20px;
+  font-size:12px;
+  font-weight:600;
+  letter-spacing:0.3px;
+}
+.decision-badge .dot{width:7px;height:7px;border-radius:50%;background:currentColor}
+.decision-badge.approved{background:var(--green-soft);color:var(--green);border:1px solid #bbf7d0}
+.decision-badge.review{background:var(--amber-soft);color:var(--amber);border:1px solid #fde68a}
+.decision-badge.rejected{background:var(--red-soft);color:var(--red);border:1px solid #fecaca}
+
+/* Dashboard content */
+.dash-content{
+  flex:1;
+  padding:28px 32px 48px;
+}
+.dash-section{display:none}
+.dash-section.active{display:block}
+
+/* Metric row */
+.metric-row{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:20px}
+.metric-card{
+  background:var(--white);
+  border:1px solid var(--line);
+  border-radius:16px;
+  padding:20px 22px;
+}
+.metric-card .mc-label{font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px}
+.metric-card .mc-val{font-size:34px;font-weight:600;line-height:1;letter-spacing:-1px;font-family:'DM Serif Display',serif}
+.metric-card .mc-sub{font-size:11px;color:var(--muted);margin-top:5px}
+.mc-green{color:var(--green)}.mc-amber{color:var(--amber)}.mc-red{color:var(--red)}
+
+/* Cards */
+.card{background:var(--white);border:1px solid var(--line);border-radius:16px;padding:22px 24px;margin-bottom:18px}
+.card:last-child{margin-bottom:0}
+.card-title{font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:16px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:18px}
+
+/* Risk band */
+.risk-band{display:flex;height:10px;border-radius:5px;overflow:hidden;margin:10px 0 6px}
+.rb-seg{flex:1}
+.needle-wrap{position:relative;height:18px;margin-bottom:6px}
+.needle{position:absolute;width:3px;height:18px;border-radius:2px;transform:translateX(-50%);transition:left 0.6s cubic-bezier(.34,1.56,.64,1)}
+.band-legend{display:flex;justify-content:space-between;font-size:9px;color:var(--muted);letter-spacing:0.3px}
+.band-label{font-size:13px;color:var(--muted);text-align:center;margin-top:8px;font-weight:500}
+
+/* Profile grid */
+.profile-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.pf-item .pf-k{font-size:10px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:3px}
+.pf-item .pf-v{font-size:15px;font-weight:600;color:var(--ink)}
+
+/* Recommendation */
+.rec-box{
+  background:var(--indigo-soft);
+  border:1px solid #c7d2fe;
+  border-radius:12px;
+  padding:14px 18px;
+  font-size:13px;
+  color:var(--indigo);
+  line-height:1.7;
+  display:flex;
+  gap:12px;
+  align-items:flex-start;
+}
+.rec-icon{font-size:18px;flex-shrink:0;margin-top:1px}
+
+/* Factors */
+.factor-list{display:flex;flex-direction:column;gap:7px}
+.factor{display:flex;align-items:center;gap:9px;padding:9px 14px;border-radius:10px;font-size:13px;font-weight:500}
+.factor.pos{background:var(--green-soft);color:var(--green)}
+.factor.neg{background:var(--red-soft);color:var(--red)}
+.factor-arr{font-size:14px}
+
+/* SHAP */
+.shap-row{display:flex;align-items:center;gap:10px;margin:6px 0}
+.shap-lbl{font-size:12px;color:var(--muted);width:175px;flex-shrink:0;text-align:right}
+.shap-wrap{flex:1;position:relative;height:22px;display:flex;align-items:center}
+.shap-center{position:absolute;left:50%;top:0;bottom:0;width:1px;background:var(--line)}
+.shap-bar{height:14px;border-radius:4px;position:absolute}
+.shap-num{font-size:11px;color:var(--muted);width:52px}
+
+/* Feature importance */
+.fi-row{display:flex;align-items:center;gap:12px;margin:8px 0}
+.fi-lbl{font-size:12px;color:var(--ink);width:185px;flex-shrink:0;font-weight:500}
+.fi-bg{flex:1;height:10px;background:var(--bg);border-radius:5px;overflow:hidden}
+.fi-fill{height:100%;border-radius:5px;background:var(--accent);opacity:0.75;transition:width 0.7s cubic-bezier(.34,1.56,.64,1)}
+.fi-pct{font-size:11px;color:var(--muted);width:38px;text-align:right}
+
+/* Simulate */
+.sim-card{background:var(--white);border:1px solid var(--line);border-radius:16px;padding:22px 24px;margin-bottom:18px}
+.slider-row{display:flex;align-items:center;gap:12px;padding:8px 0;border-bottom:1px solid var(--bg)}
+.slider-row:last-of-type{border-bottom:none}
+.sl-label{font-size:12px;color:var(--ink);width:160px;flex-shrink:0;font-weight:500}
+.slider-row input[type=range]{flex:1;accent-color:var(--accent);cursor:pointer}
+.sl-val{font-size:12px;font-weight:600;color:var(--ink);width:68px;text-align:right}
+.sim-results{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:16px}
+.sim-box{background:var(--white);border:1px solid var(--line);border-radius:12px;padding:14px 16px}
+.sim-box .sb-label{font-size:10px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px}
+.sim-box .sb-val{font-size:22px;font-weight:600;font-family:'DM Serif Display',serif}
+.sim-reason{background:#f8f6f2;border:1px solid var(--line);border-radius:12px;padding:14px 18px;font-size:13px;color:var(--muted);line-height:1.7}
+
+/* Model insight */
+.insight-line{display:flex;align-items:flex-start;gap:10px;padding:10px 0;border-bottom:1px solid var(--bg);font-size:13px;color:var(--muted);line-height:1.6}
+.insight-line:last-child{border-bottom:none}
+.insight-dot{width:6px;height:6px;border-radius:50%;background:var(--accent);flex-shrink:0;margin-top:6px}
+
+/* Empty state */
+.empty{text-align:center;padding:80px 20px;color:var(--muted)}
+.empty-icon{font-size:48px;margin-bottom:16px;opacity:0.3}
+
+/* Responsive */
+@media(max-width:720px){
+  .form-body{grid-template-columns:1fr}
+  .form-col+.form-col{border-left:none;border-top:1px solid var(--line)}
+  .metric-row,.grid2,.sim-results{grid-template-columns:1fr}
+  .dash-nav{width:54px}
+  .dash-main{margin-left:54px}
+  .dash-content{padding:20px 16px 40px}
+  .dash-topbar{padding:0 16px}
+  #page-input{padding:40px 16px 60px}
+}
+
+/* Animations */
+@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+.dash-section.active{animation:fadeUp 0.3s ease both}
+.form-shell{animation:fadeUp 0.4s ease both}
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════
+     PAGE 1 — INPUT FORM
+══════════════════════════════════════════ -->
+<div class="page active" id="page-input">
+  <div class="input-brand">
+    <div class="wordmark">Credit<em>AI</em></div>
+    <div class="tagline">Explainable Risk Prediction · Powered by XGBoost + SHAP</div>
+  </div>
+
+  <div class="form-shell">
+    <div class="form-top-bar">
+      <div class="step-label">Step 1 of 2 — Applicant Details</div>
+      <div class="progress-pills">
+        <div class="pill done"></div>
+        <div class="pill"></div>
+      </div>
+    </div>
+
+    <div class="form-body">
+      <!-- Left col -->
+      <div class="form-col">
+        <div class="col-heading"><span class="icon">👤</span> Personal & Employment</div>
+
+        <div class="field">
+          <label>Credit Score</label>
+          <input type="number" id="credit_score" value="742" min="300" max="850"/>
+          <div class="hint">Range: 300 – 850</div>
+        </div>
+        <div class="field">
+          <label>Annual Income (₹)</label>
+          <input type="number" id="annual_income" value="960000" min="0"/>
+        </div>
+        <div class="field">
+          <label>Age (years)</label>
+          <input type="number" id="age" value="35" min="21" max="70"/>
+        </div>
+        <div class="field">
+          <label>Employment Duration (years)</label>
+          <input type="number" id="emp_years" value="5" min="0" max="40" step="0.5"/>
+        </div>
+      </div>
+
+      <!-- Right col -->
+      <div class="form-col">
+        <div class="col-heading"><span class="icon">🏦</span> Loan & Financial Profile</div>
+
+        <div class="field">
+          <label>Loan Amount (₹)</label>
+          <input type="number" id="loan_amount" value="300000" min="0"/>
+        </div>
+        <div class="field">
+          <label>Loan Term</label>
+          <select id="loan_term">
+            <option value="12">12 months (1 year)</option>
+            <option value="24">24 months (2 years)</option>
+            <option value="36" selected>36 months (3 years)</option>
+            <option value="48">48 months (4 years)</option>
+            <option value="60">60 months (5 years)</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Debt-to-Income Ratio (%)</label>
+          <input type="number" id="dti" value="18" min="0" max="70" step="0.5"/>
+          <div class="hint">Monthly debt ÷ monthly income × 100</div>
+        </div>
+        <div class="field">
+          <label>Existing Active Loans</label>
+          <input type="number" id="existing_loans" value="1" min="0" max="10"/>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-footer">
+      <div class="notice">All data is processed locally on your Flask server. No information is sent to external services.</div>
+      <button class="predict-btn" id="predict-btn" onclick="runPredict()">
+        <div class="loader" id="btn-loader"></div>
+        <span id="btn-text">Analyse Risk</span>
+        <span class="btn-arrow">→</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════
+     PAGE 2 — DASHBOARD
+══════════════════════════════════════════ -->
+<div class="page" id="page-dashboard">
+
+  <!-- Side nav -->
+  <nav class="dash-nav">
+    <div class="nav-logo">C<em>A</em></div>
+    <div class="nav-divider"></div>
+    <button class="nav-btn active" onclick="switchSection('decision')" title="Decision">
+      ⚖️<span class="nav-tooltip">Decision</span>
+    </button>
+    <button class="nav-btn" onclick="switchSection('explain')" title="Explanation">
+      🧠<span class="nav-tooltip">Explanation</span>
+    </button>
+    <button class="nav-btn" onclick="switchSection('simulate')" title="Simulate">
+      🎛️<span class="nav-tooltip">Simulate</span>
+    </button>
+    <button class="nav-btn" onclick="switchSection('importance')" title="Feature Importance">
+      📊<span class="nav-tooltip">Importance</span>
+    </button>
+    <button class="nav-btn nav-back" onclick="goBack()" title="New Assessment">
+      ✏️<span class="nav-tooltip">New Assessment</span>
+    </button>
+  </nav>
+
+  <!-- Main content -->
+  <div class="dash-main">
+    <!-- Top bar -->
+    <div class="dash-topbar">
+      <div class="dash-title-area">
+        <div class="dash-title">Risk Assessment Dashboard</div>
+        <div class="dash-sub">XGBoost + SHAP · Real-time Loan Decision Engine</div>
+      </div>
+      <span class="decision-badge approved" id="main-badge">
+        <span class="dot"></span><span id="badge-text">Approved</span>
+      </span>
+    </div>
+
+    <div class="dash-content">
+
+      <!-- ── DECISION ── -->
+      <div class="dash-section active" id="sec-decision">
+        <div class="metric-row">
+          <div class="metric-card">
+            <div class="mc-label">Risk Score</div>
+            <div class="mc-val mc-green" id="d-score">742</div>
+            <div class="mc-sub">out of 850</div>
+          </div>
+          <div class="metric-card">
+            <div class="mc-label">Default Probability</div>
+            <div class="mc-val mc-green" id="d-prob">12%</div>
+            <div class="mc-sub" id="d-risk-cat">Low Risk</div>
+          </div>
+          <div class="metric-card">
+            <div class="mc-label">Approval Confidence</div>
+            <div class="mc-val mc-green" id="d-conf">92%</div>
+            <div class="mc-sub">High Confidence</div>
+          </div>
+        </div>
+
+        <div class="grid2">
+          <div class="card">
+            <div class="card-title">Risk Band</div>
+            <div class="risk-band">
+              <div class="rb-seg" style="background:#16a34a"></div>
+              <div class="rb-seg" style="background:#65a30d"></div>
+              <div class="rb-seg" style="background:#ca8a04"></div>
+              <div class="rb-seg" style="background:#ea580c"></div>
+              <div class="rb-seg" style="background:#dc2626"></div>
+            </div>
+            <div class="needle-wrap"><div class="needle" id="risk-needle" style="left:15%;background:#16a34a"></div></div>
+            <div class="band-legend"><span>Very Low</span><span>Low</span><span>Medium</span><span>High</span><span>Very High</span></div>
+            <div class="band-label" id="band-label">Low Risk Zone</div>
+          </div>
+          <div class="card">
+            <div class="card-title">Applicant Profile</div>
+            <div class="profile-grid" id="profile-grid">
+              <div class="pf-item"><div class="pf-k">Annual Income</div><div class="pf-v">₹9,60,000</div></div>
+              <div class="pf-item"><div class="pf-k">Credit Score</div><div class="pf-v">742</div></div>
+              <div class="pf-item"><div class="pf-k">Debt-to-Income</div><div class="pf-v">18%</div></div>
+              <div class="pf-item"><div class="pf-k">Employment</div><div class="pf-v">5 years</div></div>
+              <div class="pf-item"><div class="pf-k">Loan Amount</div><div class="pf-v">₹3,00,000</div></div>
+              <div class="pf-item"><div class="pf-k">Existing Loans</div><div class="pf-v">1</div></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Recommendation</div>
+          <div class="rec-box">
+            <span class="rec-icon">ℹ️</span>
+            <span id="rec-text">Eligible for standard interest rate loan (8.5% p.a.). Strong credit profile with low default risk. Recommended loan term: up to 5 years.</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── EXPLANATION ── -->
+      <div class="dash-section" id="sec-explain">
+        <div class="grid2">
+          <div class="card">
+            <div class="card-title">Positive Factors</div>
+            <div class="factor-list" id="pos-factors"></div>
+          </div>
+          <div class="card">
+            <div class="card-title">Negative Factors</div>
+            <div class="factor-list" id="neg-factors"></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title">SHAP Value Breakdown</div>
+          <div id="shap-chart"></div>
+          <div style="display:flex;gap:20px;margin-top:14px;font-size:11px;color:var(--muted)">
+            <span style="display:flex;align-items:center;gap:6px"><span style="width:10px;height:10px;border-radius:3px;background:#16a34a;display:inline-block"></span>Reduces default risk</span>
+            <span style="display:flex;align-items:center;gap:6px"><span style="width:10px;height:10px;border-radius:3px;background:#dc2626;display:inline-block"></span>Increases default risk</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── SIMULATE ── -->
+      <div class="dash-section" id="sec-simulate">
+        <div class="sim-card">
+          <div class="card-title">Adjust Parameters — Live Simulation</div>
+          <div class="slider-row"><div class="sl-label">Credit Score</div><input type="range" min="300" max="850" value="742" id="sl-credit" oninput="updateSim()"/><div class="sl-val" id="out-credit">742</div></div>
+          <div class="slider-row"><div class="sl-label">Annual Income (₹L)</div><input type="range" min="1" max="50" value="9.6" step="0.1" id="sl-income" oninput="updateSim()"/><div class="sl-val" id="out-income">₹9.6L</div></div>
+          <div class="slider-row"><div class="sl-label">Debt-to-Income %</div><input type="range" min="0" max="70" value="18" id="sl-dti" oninput="updateSim()"/><div class="sl-val" id="out-dti">18%</div></div>
+          <div class="slider-row"><div class="sl-label">Employment (years)</div><input type="range" min="0" max="30" value="5" id="sl-emp" oninput="updateSim()"/><div class="sl-val" id="out-emp">5 yrs</div></div>
+          <div class="slider-row"><div class="sl-label">Existing Loans</div><input type="range" min="0" max="6" value="1" id="sl-loans" oninput="updateSim()"/><div class="sl-val" id="out-loans">1</div></div>
+          <div class="slider-row"><div class="sl-label">Loan Amount (₹L)</div><input type="range" min="0.5" max="50" value="3" step="0.5" id="sl-amount" oninput="updateSim()"/><div class="sl-val" id="out-amount">₹3L</div></div>
+        </div>
+        <div class="sim-results">
+          <div class="sim-box"><div class="sb-label">Decision</div><div class="sb-val mc-green" id="sim-decision">Approved</div></div>
+          <div class="sim-box"><div class="sb-label">Default Probability</div><div class="sb-val mc-green" id="sim-prob">12%</div></div>
+          <div class="sim-box"><div class="sb-label">Risk Category</div><div class="sb-val mc-green" id="sim-cat">Low</div></div>
+        </div>
+        <div class="sim-reason" id="sim-reason">Strong credit score and income outweigh the mild debt burden. Approval recommended.</div>
+      </div>
+
+      <!-- ── FEATURE IMPORTANCE ── -->
+      <div class="dash-section" id="sec-importance">
+        <div class="card">
+          <div class="card-title">Global Feature Importance (XGBoost)</div>
+          <div id="fi-chart"><div class="empty" style="padding:30px"><p>Loading feature importance...</p></div></div>
+        </div>
+        <div class="card">
+          <div class="card-title">Model Insights</div>
+          <div class="insight-line"><div class="insight-dot"></div>Credit Score is the single strongest predictor — it alone shifts approval probability by ~30%.</div>
+          <div class="insight-line"><div class="insight-dot"></div>Annual Income and Debt-to-Income Ratio together account for over 40% of model decisions.</div>
+          <div class="insight-line"><div class="insight-dot"></div>Employment duration adds stability signals at the margin.</div>
+          <div class="insight-line"><div class="insight-dot"></div>Derived ratios (EMI-to-Income, Loan-to-Income) capture affordability beyond raw amounts.</div>
+          <div class="insight-line"><div class="insight-dot"></div>Loan term has the least influence, but longer terms slightly elevate risk.</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+
+<script>
+const API = "";
+
+// ── PAGE NAVIGATION ──
+function showPage(id) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+function goBack() {
+  showPage('page-input');
+}
+
+// ── SECTION NAV ──
+function switchSection(name) {
+  document.querySelectorAll('.nav-btn:not(.nav-back)').forEach((b,i) => {
+    b.classList.toggle('active', ['decision','explain','simulate','importance'][i] === name);
+  });
+  document.querySelectorAll('.dash-section').forEach(s => s.classList.remove('active'));
+  document.getElementById('sec-' + name).classList.add('active');
+}
+
+// ── PREDICT ──
+async function runPredict() {
+  const btn    = document.getElementById('predict-btn');
+  const loader = document.getElementById('btn-loader');
+  const text   = document.getElementById('btn-text');
+  btn.disabled = true;
+  loader.style.display = 'inline-block';
+  text.textContent = 'Analysing…';
+
+  const payload = {
+    credit_score:   +document.getElementById('credit_score').value,
+    annual_income:  +document.getElementById('annual_income').value,
+    age:            +document.getElementById('age').value,
+    emp_years:      +document.getElementById('emp_years').value,
+    loan_amount:    +document.getElementById('loan_amount').value,
+    loan_term:      +document.getElementById('loan_term').value,
+    dti:            +document.getElementById('dti').value,
+    existing_loans: +document.getElementById('existing_loans').value,
+  };
+
+  try {
+    const res  = await fetch(API + '/predict', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload) });
+    const data = await res.json();
+    if (data.error) { alert('Error: ' + data.error); return; }
+    renderDashboard(data, payload);
+    loadFI();
+    showPage('page-dashboard');
+    switchSection('decision');
+  } catch(e) {
+    alert('Cannot reach server. Make sure Flask is running on port 5000.\n\n' + e);
+  } finally {
+    btn.disabled = false;
+    loader.style.display = 'none';
+    text.textContent = 'Analyse Risk';
+  }
+}
+
+function colorClass(prob) { return prob < 35 ? 'mc-green' : prob < 55 ? 'mc-amber' : 'mc-red'; }
+
+function renderDashboard(data, payload) {
+  // Badge
+  const badge = document.getElementById('main-badge');
+  badge.className = 'decision-badge ' + (data.decision === 'Approved' ? 'approved' : data.decision === 'Under Review' ? 'review' : 'rejected');
+  document.getElementById('badge-text').textContent = data.decision;
+
+  // Metrics
+  const c = colorClass(data.probability);
+  ['d-score','d-prob','d-conf'].forEach(id => {
+    document.getElementById(id).className = 'mc-val ' + c;
+  });
+  document.getElementById('d-score').textContent    = data.risk_score;
+  document.getElementById('d-prob').textContent     = data.probability + '%';
+  document.getElementById('d-risk-cat').textContent = data.risk_band;
+  document.getElementById('d-conf').textContent     = data.confidence + '%';
+
+  // Risk needle
+  const pct    = Math.max(2, Math.min(98, data.probability));
+  const needle = document.getElementById('risk-needle');
+  needle.style.left       = pct + '%';
+  needle.style.background = c === 'mc-green' ? '#16a34a' : c === 'mc-amber' ? '#ca8a04' : '#dc2626';
+  document.getElementById('band-label').textContent = data.risk_band;
+
+  // Profile
+  document.getElementById('profile-grid').innerHTML = `
+    <div class="pf-item"><div class="pf-k">Annual Income</div><div class="pf-v">₹${payload.annual_income.toLocaleString('en-IN')}</div></div>
+    <div class="pf-item"><div class="pf-k">Credit Score</div><div class="pf-v">${payload.credit_score}</div></div>
+    <div class="pf-item"><div class="pf-k">Debt-to-Income</div><div class="pf-v">${payload.dti}%</div></div>
+    <div class="pf-item"><div class="pf-k">Employment</div><div class="pf-v">${payload.emp_years} years</div></div>
+    <div class="pf-item"><div class="pf-k">Loan Amount</div><div class="pf-v">₹${payload.loan_amount.toLocaleString('en-IN')}</div></div>
+    <div class="pf-item"><div class="pf-k">Existing Loans</div><div class="pf-v">${payload.existing_loans}</div></div>
+  `;
+
+  // Recommendation
+  document.getElementById('rec-text').textContent = data.recommendation;
+
+  // SHAP
+  renderSHAP(data.shap_values);
+  document.getElementById('pos-factors').innerHTML = (data.positive_factors.length ? data.positive_factors : ['None'])
+    .map(f => `<div class="factor pos"><span class="factor-arr">↑</span>${f}</div>`).join('');
+  document.getElementById('neg-factors').innerHTML = (data.negative_factors.length ? data.negative_factors : ['None'])
+    .map(f => `<div class="factor neg"><span class="factor-arr">↓</span>${f}</div>`).join('');
+
+  // Sync simulate sliders with input values
+  document.getElementById('sl-credit').value = payload.credit_score;
+  document.getElementById('sl-income').value = (payload.annual_income/100000).toFixed(1);
+  document.getElementById('sl-dti').value    = payload.dti;
+  document.getElementById('sl-emp').value    = payload.emp_years;
+  document.getElementById('sl-loans').value  = payload.existing_loans;
+  document.getElementById('sl-amount').value = (payload.loan_amount/100000).toFixed(1);
+  updateSim();
+}
+
+function renderSHAP(shap) {
+  const container = document.getElementById('shap-chart');
+  container.innerHTML = '';
+  const sorted = [...shap].sort((a,b) => a.shap_value - b.shap_value);
+  const maxAbs = Math.max(...sorted.map(d => Math.abs(d.shap_value)));
+  sorted.forEach(d => {
+    const row  = document.createElement('div'); row.className = 'shap-row';
+    const lbl  = document.createElement('div'); lbl.className = 'shap-lbl'; lbl.textContent = d.label;
+    const wrap = document.createElement('div'); wrap.className = 'shap-wrap';
+    const cl   = document.createElement('div'); cl.className = 'shap-center';
+    const bar  = document.createElement('div'); bar.className = 'shap-bar';
+    const pct  = (Math.abs(d.shap_value) / maxAbs) * 44;
+    if (d.shap_value < 0) { bar.style.left='50%'; bar.style.width=pct+'%'; bar.style.background='#16a34a'; }
+    else                  { bar.style.right='50%'; bar.style.width=pct+'%'; bar.style.background='#dc2626'; }
+    wrap.appendChild(cl); wrap.appendChild(bar);
+    const num = document.createElement('div'); num.className = 'shap-num';
+    num.textContent = (d.shap_value > 0 ? '+' : '') + d.shap_value.toFixed(3);
+    row.appendChild(lbl); row.appendChild(wrap); row.appendChild(num);
+    container.appendChild(row);
+  });
+}
+
+async function loadFI() {
+  try {
+    const res  = await fetch(API + '/feature-importance');
+    const data = await res.json();
+    const cont = document.getElementById('fi-chart');
+    cont.innerHTML = '';
+    data.forEach(d => {
+      const row = document.createElement('div'); row.className = 'fi-row';
+      row.innerHTML = `<div class="fi-lbl">${d.label}</div><div class="fi-bg"><div class="fi-fill" style="width:${d.importance}%"></div></div><div class="fi-pct">${d.importance.toFixed(1)}%</div>`;
+      cont.appendChild(row);
+    });
+  } catch(e) { console.warn('FI load failed', e); }
+}
+
+function computeRisk(credit, income, dti, emp, loans, amount) {
+  let s = 0;
+  s += (credit - 300) / 550 * 35;
+  s += Math.min(income / 20, 1) * 20;
+  s += Math.max(0, 1 - dti / 60) * 20;
+  s += Math.min(emp / 10, 1) * 15;
+  s -= loans * 5;
+  s -= Math.max(0, amount - 5) * 0.3;
+  return Math.max(0, Math.min(100, s));
+}
+
+function updateSim() {
+  const credit = +document.getElementById('sl-credit').value;
+  const income = +document.getElementById('sl-income').value;
+  const dti    = +document.getElementById('sl-dti').value;
+  const emp    = +document.getElementById('sl-emp').value;
+  const loans  = +document.getElementById('sl-loans').value;
+  const amount = +document.getElementById('sl-amount').value;
+
+  document.getElementById('out-credit').textContent = credit;
+  document.getElementById('out-income').textContent = '₹' + income.toFixed(1) + 'L';
+  document.getElementById('out-dti').textContent    = dti + '%';
+  document.getElementById('out-emp').textContent    = emp + ' yrs';
+  document.getElementById('out-loans').textContent  = loans;
+  document.getElementById('out-amount').textContent = '₹' + amount.toFixed(1) + 'L';
+
+  const s    = computeRisk(credit, income, dti, emp, loans, amount);
+  const prob = Math.round(100 - s);
+  const c    = colorClass(prob);
+  let decision, cat, reason;
+  if (s >= 65)      { decision='Approved';     cat='Low';    reason='Strong credit profile. Approval recommended at standard interest rate.'; }
+  else if (s >= 45) { decision='Under Review'; cat='Medium'; reason='Borderline profile. Manual review recommended before final decision.'; }
+  else              { decision='Rejected';     cat='High';   reason='High default risk. Improve credit score and reduce existing debt before reapplying.'; }
+
+  document.getElementById('sim-decision').textContent = decision;
+  document.getElementById('sim-decision').className   = 'sb-val ' + c;
+  document.getElementById('sim-prob').textContent     = prob + '%';
+  document.getElementById('sim-prob').className       = 'sb-val ' + c;
+  document.getElementById('sim-cat').textContent      = cat;
+  document.getElementById('sim-cat').className        = 'sb-val ' + c;
+  document.getElementById('sim-reason').textContent   = reason;
+}
+
+updateSim();
+</script>
+</body>
+</html>
